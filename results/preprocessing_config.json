@@ -1,0 +1,17 @@
+{
+    "random_state": 42,
+    "original_samples": 10299,
+    "train_samples": 7352,
+    "test_samples": 2947,
+    "original_features": 561,
+    "sample_size": 3000,
+    "sampling_strategy": "stratified_by_activity",
+    "scaler": "StandardScaler",
+    "scaler_mean_preserved": true,
+    "pca_components": 104,
+    "pca_cumulative_variance": 95.05,
+    "sample_files": {
+        "indices_file": "data/processed/sample_indices.csv",
+        "sampled_pca_data": "data/processed/sampled_data_scaled_pca.csv"
+    }
+}
