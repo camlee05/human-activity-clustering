@@ -1,0 +1,12 @@
+Metric,Value
+K,2.0
+Inertia,856617.4926764363
+Silhouette,0.41523716954522677
+Davies_Bouldin,1.0114345607105215
+Calinski_Harabasz,2565.8200689986156
+Fit_seconds,0.03858477999983734
+Iterations,5.0
+Min_cluster_size,1362.0
+Max_cluster_size,1638.0
+ARI,0.33010801025775577
+NMI,0.5478428407944219
