@@ -1,80 +1,101 @@
-# Human Activity Clustering
+# Phân nhóm hoạt động con người từ dữ liệu cảm biến điện thoại
 
-Phân nhóm hoạt động con người từ dữ liệu UCI HAR bằng K-Means và Hierarchical Clustering.
+Dự án bài tập lớn môn **Khai phá dữ liệu**, sử dụng bộ dữ liệu **UCI Human Activity Recognition Using Smartphones (UCI HAR)** để khám phá và phân nhóm các hoạt động của con người thông qua đặc trưng cảm biến điện thoại.
 
-## Quy trình
+## Giới thiệu
 
-1. `notebooks/01_EDA.ipynb`: khám phá dữ liệu (Thảo).
-2. `notebooks/02_Preprocessing_and_PCA.ipynb`: chuẩn hóa, PCA và lấy mẫu (Ly).
-3. `notebooks/03_KMeans.ipynb`: khảo sát K=2…10, đánh giá và bàn giao (Thành).
-4. Phần Hierarchical do Huy bổ sung, dùng đúng tập mẫu và thứ tự dòng đã cố định.
+Điện thoại thông minh có thể ghi nhận chuyển động bằng gia tốc kế và con quay hồi chuyển. Các tín hiệu này được xử lý thành những đặc trưng số, phản ánh sự khác biệt giữa các trạng thái và hoạt động của người dùng.
 
-## Cài đặt và chạy phần K-Means
+Dự án áp dụng phương pháp học không giám sát để tìm các nhóm mẫu có đặc điểm tương đồng, sau đó đối chiếu với hoạt động thực tế nhằm đánh giá và diễn giải kết quả.
 
-Yêu cầu Python 3.10 trở lên. Từ thư mục gốc repo:
+## Mục tiêu
 
-```bash
-python -m pip install -r requirements.txt
-python src/run_kmeans.py
-```
+- Tìm hiểu cấu trúc và đặc điểm của bộ dữ liệu UCI HAR.
+- Khám phá dữ liệu bằng thống kê và biểu đồ.
+- Chuẩn hóa dữ liệu và giảm chiều bằng PCA.
+- Xây dựng, đánh giá mô hình phân cụm K-Means.
+- Hướng tới so sánh K-Means với Hierarchical Clustering trên cùng tập dữ liệu.
+- Phân tích mối quan hệ giữa các cụm và hoạt động thực tế.
 
-Hoặc mở Jupyter và chạy lần lượt tất cả các cell trong `notebooks/03_KMeans.ipynb`:
+## Bộ dữ liệu
 
-```bash
-python -m jupyter notebook
-```
+Bộ dữ liệu UCI HAR được thu thập từ **30 người tham gia**, sử dụng điện thoại Samsung Galaxy S II đặt tại thắt lưng.
 
-Dữ liệu và cấu hình bàn giao đã có trong repo nên không cần chạy lại tiền xử lý để thực hiện phần K-Means. Notebook đã lưu đầu ra từ lần chạy thực tế. Phiên bản thư viện và SHA-256 của đầu vào được ghi trong `results/kmeans/experiment_config.json`. Cùng cấu hình và phiên bản giúp tái lập kết quả; thời gian và một số sai số số học có thể khác theo môi trường.
+| Đặc điểm | Giá trị |
+| --- | --- |
+| Tổng số mẫu | 10.299 |
+| Số đặc trưng cảm biến | 561 |
+| Số người tham gia | 30 |
+| Số hoạt động | 6 |
 
-## Đầu vào cố định
+Sáu hoạt động trong bộ dữ liệu gồm:
 
-- `data/processed/sampled_data_scaled_pca.csv`: 3.000 dòng, 104 cột PC và bốn cột tham chiếu.
-- `data/processed/sample_indices.csv`: chỉ số và thông tin mẫu đúng thứ tự.
-- `results/preprocessing_config.json`: StandardScaler, PCA giữ khoảng 95,05% phương sai, lấy mẫu phân tầng với random_state=42.
-- Dữ liệu nhãn gốc trong `data/raw/UCI HAR Dataset` để kiểm tra ghép nhãn.
+| Hoạt động | Ý nghĩa |
+| --- | --- |
+| WALKING | Đi bộ |
+| WALKING_UPSTAIRS | Đi lên cầu thang |
+| WALKING_DOWNSTAIRS | Đi xuống cầu thang |
+| SITTING | Ngồi |
+| STANDING | Đứng |
+| LAYING | Nằm |
 
-**Chỉ PC1…PC104 được đưa vào K-Means.** Activity, ActivityName, Subject, Original_Index không phải đặc trưng đầu vào. Không lấy mẫu, chuẩn hóa hoặc tính PCA lại. PCA được fit trên toàn bộ dữ liệu ở giai đoạn của Ly; thí nghiệm này mô tả dữ liệu đã có, chưa đánh giá khả năng khái quát sang người tham gia mới. Nhãn hoạt động đã được dùng cho lấy mẫu phân tầng, nhưng không dùng trong huấn luyện K-Means hay lựa chọn K.
+## Phương pháp thực hiện
+
+### Khám phá dữ liệu
+
+Kiểm tra kích thước, kiểu dữ liệu, giá trị thiếu, dòng trùng lặp, phân bố hoạt động và mức độ tương quan giữa các đặc trưng.
+
+### Tiền xử lý và giảm chiều
+
+Dữ liệu được chuẩn hóa bằng **StandardScaler**, sau đó áp dụng **PCA** để giảm từ 561 đặc trưng xuống **104 thành phần chính**, giữ lại khoảng **95,05% phương sai**.
+
+Tập thực nghiệm gồm **3.000 mẫu cố định**, được lấy mẫu phân tầng theo hoạt động với `random_state = 42`, nhằm tạo đầu vào thống nhất cho việc so sánh các thuật toán.
+
+### Phân cụm K-Means
+
+Khảo sát số cụm **K từ 2 đến 10**, sử dụng Elbow và Silhouette để phân tích và lựa chọn số cụm phù hợp.
+
+Mô hình chỉ sử dụng các thành phần PCA làm đầu vào. Nhãn hoạt động và thông tin định danh được giữ riêng, không tham gia huấn luyện hoặc lựa chọn K.
+
+### Đánh giá kết quả
+
+Các chỉ số đánh giá nội bộ:
+
+- Silhouette Score.
+- Davies–Bouldin Index.
+- Calinski–Harabasz Index.
+
+Các chỉ số đối chiếu với nhãn hoạt động sau phân cụm:
+
+- Adjusted Rand Index (ARI).
+- Normalized Mutual Information (NMI).
+
+Kết quả được trình bày bằng bảng số liệu, biểu đồ phân cụm trên PC1–PC2 và bảng phân bố hoạt động trong từng cụm.
 
 ## Kết quả K-Means
 
-K=2 được chọn do Silhouette cao nhất trong K=2…10. Gợi ý Elbow hình học là K=5, được công khai vì không đồng thuận với Silhouette. K=6 được giữ làm thực nghiệm bổ sung để đối chiếu với sáu nhãn hoạt động, không được dùng thay thế lựa chọn chính sau khi xem ARI/NMI.
+Trong dải giá trị khảo sát, **K=2 có Silhouette cao nhất** và được chọn làm mô hình chính. Hai cụm chủ yếu phản ánh sự khác biệt giữa nhóm hoạt động chuyển động và nhóm tư thế tĩnh.
 
-| Mô hình | Silhouette | Davies–Bouldin | Calinski–Harabasz | ARI | NMI |
-| --- | --- | --- | --- | --- | --- |
-| K=2 được chọn | 0.415237 | 1.011435 | 2565.820069 | 0.330108 | 0.547843 |
-| K=6 bổ sung | 0.133631 | 2.161166 | 857.717375 | 0.416495 | 0.562532 |
+Kết quả này chưa tương ứng với việc nhận diện riêng biệt cả sáu hoạt động. Thực nghiệm K=6 được giữ lại để phân tích bổ sung và làm rõ sự khác biệt giữa cấu trúc phân cụm với các nhãn hoạt động gốc.
 
-K=2 chủ yếu tách nhóm chuyển động và nhóm tư thế tĩnh, chưa tách được sáu hoạt động chi tiết. ARI và NMI không phải độ chính xác phân loại. Silhouette được tính trên đủ 3.000 mẫu và 104 PC; PC1–PC2 chỉ để vẽ hình.
+## Công nghệ sử dụng
 
-![Silhouette theo K](results/kmeans/fig_5_2_silhouette.png)
+- Python.
+- Jupyter Notebook.
+- NumPy và pandas.
+- Matplotlib và Seaborn.
+- Scikit-learn.
+- SciPy.
 
-![Phân cụm và nhãn tham chiếu](results/kmeans/fig_5_3_clusters_pca2d.png)
+## Thành viên thực hiện
 
-## File bàn giao
-
-| File/thư mục | Nội dung |
+| Thành viên | Phần việc chính |
 | --- | --- |
-| `results/kmeans/k_sweep.csv` | Bảng thử K=2…10 và các chỉ số |
-| `results/kmeans/final_metrics.csv` | Chỉ số mô hình được chọn |
-| `results/kmeans/cluster_labels.csv` | Nhãn cụm cuối cùng kèm Sample_Index và Original_Index |
-| `results/kmeans/labels_all_k.csv` | Nhãn dự đoán của mọi K để so sánh cùng số cụm |
-| `results/kmeans/cluster_centers.csv` | Tâm cụm trong 104 chiều PCA |
-| `results/kmeans/activity_crosstab_k*.csv` | Bảng chéo hoạt động cho K được chọn và K=6 |
-| `results/kmeans/experiment_config.json` | Cấu hình, phiên bản thư viện và dấu kiểm SHA-256 |
-| `results/kmeans/*.png` | Elbow, Silhouette, PCA 2D, quy mô cụm và bảng chéo |
-| `reports/Noi_dung_KMeans_Thanh.md` | Nội dung phần báo cáo của Thành |
+| Cao Thanh Thảo | Tìm hiểu đề tài và khám phá dữ liệu |
+| Lê Thị Cẩm Ly | Tiền xử lý, chuẩn hóa và PCA |
+| Nguyễn Văn Thành | Xây dựng và đánh giá K-Means |
+| Lê Quang Huy | Hierarchical Clustering và so sánh thuật toán |
 
-File sơ bộ cũ `results/kmeans_pca_results.csv` có 10.299 mẫu, được giữ lại để bảo toàn công việc trước đó. Không dùng file này để so sánh trực tiếp với Hierarchical trên tập 3.000 mẫu.
+## Ý nghĩa của dự án
 
-## Kiểm tra
-
-```bash
-python -m unittest discover -s tests -v
-```
-
-Các kiểm tra bao gồm loại thông tin tham chiếu khỏi X, phát hiện sai thứ tự dòng, nhãn tham chiếu sai, dữ liệu không hữu hạn và bảo đảm việc chọn K không dựa vào ARI/NMI.
-
-## Tài liệu
-
-- [UCI HAR](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones)
-- [Scikit-learn: K-Means và đánh giá phân cụm](https://scikit-learn.org/stable/modules/clustering.html)
+Dự án giúp vận dụng quy trình khai phá dữ liệu từ khám phá, tiền xử lý đến xây dựng và đánh giá mô hình. Qua dữ liệu cảm biến điện thoại, nhóm tìm hiểu khả năng phát hiện cấu trúc hoạt động bằng phân cụm và những hạn chế khi diễn giải các cụm thành hoạt động thực tế.
